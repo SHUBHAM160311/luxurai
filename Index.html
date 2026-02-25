@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LuxurAI — Imagine Without Limits</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@200;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-pale: #F5E6C0;
+    --gold-dark: #8B6914;
+    --black: #080808;
+    --black-2: #0F0F0F;
+    --black-3: #161616;
+    --black-4: #1E1E1E;
+    --white: #F8F4ED;
+    --white-dim: #C8C0B0;
+    --gray: #888070;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    position: fixed;
+    width: 8px; height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.15s ease;
+    opacity: 0.6;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.35;
+  }
+
+  /* NAVBAR */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 28px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+    background: rgba(8,8,8,0.85);
+    backdrop-filter: blur(20px);
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-decoration: none;
+  }
+  .logo span { color: var(--white); font-weight: 300; }
+
+  .nav-links {
+    display: flex;
+    gap: 48px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--white-dim);
+    text-decoration: none;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 10px 28px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.3s;
+    text-decoration: none;
+  }
+  .nav-cta:hover {
+    background: var(--gold);
+    color: var(--black);
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 120px 60px 80px;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 40%, rgba(201,168,76,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 20% 80%, rgba(201,168,76,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 80% 20%, rgba(201,168,76,0.03) 0%, transparent 60%);
+  }
+
+  .hero-line {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px; height: 600px;
+    border: 1px solid rgba(201,168,76,0.06);
+    border-radius: 50%;
+    animation: pulse-ring 6s ease-in-out infinite;
+  }
+  .hero-line:nth-child(2) {
+    width: 900px; height: 900px;
+    border-color: rgba(201,168,76,0.04);
+    animation-delay: 1s;
+  }
+  .hero-line:nth-child(3) {
+    width: 1200px; height: 1200px;
+    border-color: rgba(201,168,76,0.02);
+    animation-delay: 2s;
+  }
+
+  @keyframes pulse-ring {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.03); opacity: 0.6; }
+  }
+
+  .hero-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 32px;
+    position: relative;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.3s;
+  }
+  .hero-eyebrow::before,
+  .hero-eyebrow::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 60px; height: 1px;
+    background: var(--gold);
+    opacity: 0.4;
+  }
+  .hero-eyebrow::before { right: calc(100% + 20px); }
+  .hero-eyebrow::after { left: calc(100% + 20px); }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(4rem, 10vw, 8.5rem);
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    position: relative;
+    opacity: 0;
+    animation: fadeUp 1.2s ease forwards 0.5s;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .hero-subtitle {
+    margin-top: 36px;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    color: var(--white-dim);
+    max-width: 520px;
+    line-height: 1.9;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.8s;
+  }
+
+  .hero-actions {
+    margin-top: 56px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 1s;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--black);
+    padding: 16px 44px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: none;
+    cursor: none;
+    text-decoration: none;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gold-light);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .btn-primary:hover::before { transform: translateX(0); }
+  .btn-primary span { position: relative; z-index: 1; }
+
+  .btn-secondary {
+    color: var(--white-dim);
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.3s;
+  }
+  .btn-secondary:hover { color: var(--gold); }
+  .btn-secondary::after {
+    content: '→';
+    transition: transform 0.3s;
+  }
+  .btn-secondary:hover::after { transform: translateX(4px); }
+
+  .hero-coins {
+    margin-top: 64px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--gray);
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 1.2s;
+  }
+  .coin-badge {
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--gold);
+    padding: 6px 16px;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+  }
+
+  /* MARQUEE */
+  .marquee-section {
+    border-top: 1px solid rgba(201,168,76,0.1);
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+    padding: 18px 0;
+    overflow: hidden;
+    background: var(--black-2);
+  }
+  .marquee-track {
+    display: flex;
+    gap: 60px;
+    animation: marquee 20s linear infinite;
+    white-space: nowrap;
+  }
+  .marquee-item {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.6;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .marquee-item::before {
+    content: '◆';
+    font-size: 0.4rem;
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* SECTION COMMONS */
+  section { padding: 120px 60px; }
+
+  .section-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .section-label::before {
+    content: '';
+    width: 40px; height: 1px;
+    background: var(--gold);
+    opacity: 0.5;
+  }
+
+  /* FEATURES */
+  .features {
+    background: var(--black-2);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .features-left {
+    padding: 120px 80px 120px 60px;
+    border-right: 1px solid rgba(201,168,76,0.1);
+  }
+  .features-right {
+    padding: 120px 60px 120px 80px;
+  }
+
+  .features h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 4vw, 4rem);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 48px;
+  }
+  .features h2 em { font-style: italic; color: var(--gold); }
+
+  .feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+  .feature-item {
+    display: flex;
+    gap: 24px;
+    padding-bottom: 36px;
+    border-bottom: 1px solid rgba(201,168,76,0.08);
+  }
+  .feature-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .feature-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem;
+    color: rgba(201,168,76,0.15);
+    font-weight: 300;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 50px;
+  }
+  .feature-text h3 {
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+  .feature-text p {
+    font-size: 0.82rem;
+    color: var(--gray);
+    line-height: 1.8;
+  }
+
+  /* GENERATOR PREVIEW */
+  .generator-section {
+    background: var(--black-3);
+    text-align: center;
+    padding: 120px 60px;
+  }
+  .generator-section h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .generator-section h2 em { font-style: italic; color: var(--gold); }
+  .generator-section p {
+    color: var(--gray);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 64px;
+  }
+
+  .generator-ui {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--black-4);
+    border: 1px solid rgba(201,168,76,0.15);
+    padding: 48px;
+    position: relative;
+  }
+  .generator-ui::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .prompt-area {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+  }
+  .prompt-input {
+    flex: 1;
+    background: var(--black-2);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-right: none;
+    color: var(--white);
+    padding: 16px 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.82rem;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .prompt-input:focus { border-color: rgba(201,168,76,0.5); }
+  .prompt-input::placeholder { color: var(--gray); }
+
+  .generate-btn {
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 16px 32px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: background 0.3s;
+  }
+  .generate-btn:hover { background: var(--gold-light); }
+
+  .gen-options {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .gen-option {
+    background: var(--black-2);
+    border: 1px solid rgba(201,168,76,0.15);
+    color: var(--white-dim);
+    padding: 8px 20px;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .gen-option:hover, .gen-option.active {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .gen-option .lc-cost {
+    background: rgba(201,168,76,0.15);
+    color: var(--gold);
+    padding: 2px 8px;
+    font-size: 0.6rem;
+  }
+
+  .res-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+  .res-btn {
+    background: var(--black-2);
+    border: 1px solid rgba(201,168,76,0.1);
+    color: var(--gray);
+    padding: 10px 4px;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-align: center;
+    cursor: none;
+    transition: all 0.3s;
+  }
+  .res-btn:hover, .res-btn.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(201,168,76,0.05);
+  }
+  .res-btn .lc { display: block; color: var(--gold); font-size: 0.65rem; margin-top: 4px; }
+
+  .lc-balance {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 24px;
+    border-top: 1px solid rgba(201,168,76,0.1);
+  }
+  .lc-balance-left {
+    font-size: 0.7rem;
+    color: var(--gray);
+    letter-spacing: 0.1em;
+  }
+  .lc-balance-left span {
+    color: var(--gold);
+    font-size: 1.1rem;
+    font-family: 'Cormorant Garamond', serif;
+    margin-left: 8px;
+  }
+  .lc-buy {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(201,168,76,0.3);
+    padding-bottom: 2px;
+    transition: border-color 0.3s;
+  }
+  .lc-buy:hover { border-color: var(--gold); }
+
+  /* PRICING */
+  .pricing {
+    background: var(--black);
+    text-align: center;
+  }
+  .pricing h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .pricing h2 em { font-style: italic; color: var(--gold); }
+  .pricing > p {
+    color: var(--gray);
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 64px;
+  }
+
+  .lc-rate {
+    display: inline-flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.2);
+    padding: 14px 32px;
+    margin-bottom: 64px;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: var(--white-dim);
+  }
+  .lc-rate strong { color: var(--gold); font-weight: 400; }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: rgba(201,168,76,0.1);
+    margin-bottom: 1px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .pricing-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(201,168,76,0.1);
+    max-width: 1200px;
+    margin: 1px auto 0;
+  }
+
+  .price-card {
+    background: var(--black-2);
+    padding: 40px 32px;
+    text-align: left;
+    transition: background 0.3s;
+    position: relative;
+  }
+  .price-card:hover { background: var(--black-3); }
+  .price-card.featured {
+    background: var(--black-3);
+  }
+  .price-card.featured::before {
+    content: 'MOST POPULAR';
+    position: absolute;
+    top: -1px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: var(--black);
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    padding: 4px 16px;
+    font-weight: 600;
+  }
+
+  .pack-name {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 16px;
+  }
+  .pack-lc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.8rem;
+    color: var(--white);
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .pack-lc span { font-size: 1rem; color: var(--gold); }
+  .pack-price {
+    font-size: 1.1rem;
+    color: var(--gold);
+    margin-bottom: 24px;
+    font-weight: 400;
+  }
+  .pack-per {
+    font-size: 0.65rem;
+    color: var(--gray);
+    letter-spacing: 0.1em;
+  }
+  .pack-btn {
+    display: block;
+    text-align: center;
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--gold);
+    padding: 10px;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    margin-top: 24px;
+    transition: all 0.3s;
+    cursor: none;
+  }
+  .pack-btn:hover, .price-card.featured .pack-btn {
+    background: var(--gold);
+    color: var(--black);
+    border-color: var(--gold);
+  }
+
+  /* JUMBO */
+  .jumbo-section {
+    background: var(--black-2);
+    padding: 80px 60px;
+    max-width: 1200px;
+    margin: 40px auto;
+    border: 1px solid rgba(201,168,76,0.2);
+    position: relative;
+    overflow: hidden;
+  }
+  .jumbo-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .jumbo-glow {
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .jumbo-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 60px;
+  }
+  .jumbo-left { flex: 1; }
+  .jumbo-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--black);
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .jumbo-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.5rem;
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .jumbo-title em { font-style: italic; color: var(--gold); }
+  .jumbo-desc {
+    color: var(--gray);
+    font-size: 0.82rem;
+    line-height: 1.8;
+    max-width: 400px;
+  }
+  .jumbo-right { text-align: right; }
+  .jumbo-lc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 5rem;
+    color: var(--gold);
+    font-weight: 300;
+    line-height: 1;
+  }
+  .jumbo-lc span { font-size: 1.5rem; }
+  .jumbo-price {
+    font-size: 1.5rem;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .jumbo-save {
+    font-size: 0.7rem;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    margin-bottom: 24px;
+  }
+  .jumbo-btn {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--black);
+    padding: 16px 48px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: none;
+    transition: background 0.3s;
+  }
+  .jumbo-btn:hover { background: var(--gold-light); }
+
+  /* CUSTOM LC */
+  .custom-lc {
+    max-width: 1200px;
+    margin: 0 auto 80px;
+    background: var(--black-3);
+    border: 1px solid rgba(201,168,76,0.1);
+    padding: 48px;
+    display: flex;
+    align-items: center;
+    gap: 48px;
+  }
+  .custom-lc-left { flex: 1; }
+  .custom-lc-left h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 300;
+    margin-bottom: 8px;
+  }
+  .custom-lc-left p { color: var(--gray); font-size: 0.78rem; }
+  .custom-lc-right {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+  }
+  .custom-input-wrap {
+    flex: 1;
+    position: relative;
+  }
+  .custom-lc-input {
+    width: 100%;
+    background: var(--black-2);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-right: none;
+    color: var(--white);
+    padding: 16px 20px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    outline: none;
+  }
+  .custom-lc-input::placeholder { color: rgba(201,168,76,0.3); }
+  .custom-price-display {
+    position: absolute;
+    right: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+  }
+  .custom-buy-btn {
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 16px 32px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: none;
+    white-space: nowrap;
+    transition: background 0.3s;
+  }
+  .custom-buy-btn:hover { background: var(--gold-light); }
+
+  /* IMAGE PRICING */
+  .img-pricing {
+    background: var(--black-2);
+    padding: 80px 60px;
+  }
+  .img-pricing h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 300;
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .img-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: rgba(201,168,76,0.1);
+    max-width: 1000px;
+    margin: 0 auto 40px;
+  }
+  .img-price-item {
+    background: var(--black-3);
+    padding: 24px 16px;
+    text-align: center;
+    transition: background 0.3s;
+  }
+  .img-price-item:hover { background: var(--black-4); }
+  .img-res {
+    font-size: 0.7rem;
+    color: var(--gray);
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+  .img-lc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    color: var(--gold);
+    font-weight: 300;
+  }
+  .img-lc-label { font-size: 0.75rem; color: var(--gray); }
+
+  .addons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .addon-item {
+    background: var(--black-3);
+    border: 1px solid rgba(201,168,76,0.1);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .addon-name {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--white-dim);
+  }
+  .addon-name small {
+    display: block;
+    color: var(--gray);
+    font-size: 0.65rem;
+    margin-top: 4px;
+  }
+  .addon-lc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+  }
+
+  /* LOYALTY */
+  .loyalty {
+    background: var(--black-3);
+    padding: 80px 60px;
+    text-align: center;
+  }
+  .loyalty h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 300;
+    margin-bottom: 48px;
+  }
+  .loyalty-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .loyalty-item {
+    background: var(--black-4);
+    border: 1px solid rgba(201,168,76,0.1);
+    padding: 32px 24px;
+  }
+  .loyalty-icon {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+  .loyalty-title {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .loyalty-desc {
+    font-size: 0.75rem;
+    color: var(--gray);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  .loyalty-reward {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--black-2);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    padding: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+  }
+  .footer-logo span { color: var(--white-dim); font-weight: 300; }
+  .footer-text {
+    font-size: 0.65rem;
+    color: var(--gray);
+    letter-spacing: 0.15em;
+    text-align: center;
+  }
+  .footer-links {
+    display: flex;
+    gap: 32px;
+  }
+  .footer-links a {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gray);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .footer-links a:hover { color: var(--gold); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+  /* QUEUE MODAL */
+  .queue-toast {
+    position: fixed;
+    bottom: 40px; right: 40px;
+    background: var(--black-4);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-left: 3px solid var(--gold);
+    padding: 20px 28px;
+    z-index: 500;
+    display: none;
+    min-width: 280px;
+  }
+  .queue-toast.show { display: block; animation: slideIn 0.4s ease; }
+  .queue-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .queue-progress {
+    height: 2px;
+    background: rgba(201,168,76,0.2);
+    margin-top: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .queue-progress-bar {
+    height: 100%;
+    background: var(--gold);
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+  .queue-status {
+    font-size: 0.75rem;
+    color: var(--white-dim);
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* SIGNUP MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(10px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--black-3);
+    border: 1px solid rgba(201,168,76,0.2);
+    padding: 60px;
+    max-width: 480px;
+    width: 90%;
+    position: relative;
+    text-align: center;
+  }
+  .modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .modal-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: none;
+    border: none;
+    color: var(--gray);
+    cursor: none;
+    font-size: 1.2rem;
+    transition: color 0.3s;
+  }
+  .modal-close:hover { color: var(--gold); }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem;
+    font-weight: 300;
+    margin-bottom: 12px;
+  }
+  .modal-title em { font-style: italic; color: var(--gold); }
+  .modal-sub {
+    color: var(--gray);
+    font-size: 0.78rem;
+    margin-bottom: 12px;
+    line-height: 1.7;
+  }
+  .modal-bonus {
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2);
+    padding: 16px;
+    margin-bottom: 32px;
+    font-size: 0.75rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+  }
+  .modal-bonus strong {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: var(--white);
+    color: var(--black);
+    padding: 16px 32px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    cursor: none;
+    transition: background 0.3s;
+    width: 100%;
+  }
+  .google-btn:hover { background: var(--gold-pale); }
+  .google-icon {
+    width: 18px; height: 18px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Navbar -->
+<nav>
+  <a href="#" class="logo">Luxur<span>AI</span></a>
+  <ul class="nav-links">
+    <li><a href="#generate">Generate</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#about">About</a></li>
+  </ul>
+  <a href="#" class="nav-cta" onclick="showModal()">Start Free</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-line"></div>
+  <div class="hero-line"></div>
+  <div class="hero-line"></div>
+
+  <div class="hero-eyebrow">AI Image Generation · Made in India</div>
+
+  <h1 class="hero-title">
+    Imagine<br><em>Without</em><br>Limits
+  </h1>
+
+  <p class="hero-subtitle">
+    Transform your words into stunning visuals with LuxurAI — a 215M parameter image generation model trained for excellence.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#" class="btn-primary" onclick="showModal()"><span>Start Creating Free</span></a>
+    <a href="#generate" class="btn-secondary">See it work</a>
+  </div>
+
+  <div class="hero-coins">
+    <div class="coin-badge">✦ 45 LC Free on Signup</div>
+    <span>·</span>
+    <span>No Credit Card Required</span>
+  </div>
+</section>
+
+<!-- Marquee -->
+<div class="marquee-section">
+  <div class="marquee-track">
+    <span class="marquee-item">Text to Image</span>
+    <span class="marquee-item">215M Parameters</span>
+    <span class="marquee-item">Up to 1024×1024</span>
+    <span class="marquee-item">LuxurCoin System</span>
+    <span class="marquee-item">Made in India</span>
+    <span class="marquee-item">Fast Generation</span>
+    <span class="marquee-item">No Watermark Option</span>
+    <span class="marquee-item">Text to Image</span>
+    <span class="marquee-item">215M Parameters</span>
+    <span class="marquee-item">Up to 1024×1024</span>
+    <span class="marquee-item">LuxurCoin System</span>
+    <span class="marquee-item">Made in India</span>
+    <span class="marquee-item">Fast Generation</span>
+    <span class="marquee-item">No Watermark Option</span>
+  </div>
+</div>
+
+<!-- Features -->
+<section class="features">
+  <div class="features-left reveal">
+    <div class="section-label">Why LuxurAI</div>
+    <h2>Built for <em>creators</em><br>who demand more</h2>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-num">01</div>
+        <div class="feature-text">
+          <h3>Custom-Trained Model</h3>
+          <p>215M parameter architecture trained specifically for high-quality image generation. Not a wrapper — this is ours.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-num">02</div>
+        <div class="feature-text">
+          <h3>LuxurCoin Economy</h3>
+          <p>Pay only for what you create. 1 LC = ₹0.25. Start with 45 LC free — no strings attached.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-num">03</div>
+        <div class="feature-text">
+          <h3>Resolution Control</h3>
+          <p>From 100×100 to 1024×1024. You choose the size, we deliver the quality.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="features-right reveal">
+    <div class="section-label">Performance</div>
+    <h2>Fast.<br><em>Reliable.</em><br>Affordable.</h2>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-num">04</div>
+        <div class="feature-text">
+          <h3>~3 Second Generation</h3>
+          <p>1024×1024 images generated in approximately 3 seconds on our A40 GPU infrastructure.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-num">05</div>
+        <div class="feature-text">
+          <h3>Smart Queue System</h3>
+          <p>6-batch parallel processing ensures your requests are handled efficiently even during peak hours.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-num">06</div>
+        <div class="feature-text">
+          <h3>Loyalty Rewards</h3>
+          <p>The more you create, the more you earn back. Regular users get LC rewards automatically.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Generator Preview -->
+<section class="generator-section" id="generate">
+  <div class="section-label" style="justify-content:center">Live Generator</div>
+  <h2>Try it <em>now</em></h2>
+  <p>Sign in to start generating · 45 LC free on your first login</p>
+
+  <div class="generator-ui reveal">
+    <div class="prompt-area">
+      <input type="text" class="prompt-input" placeholder="A golden palace at sunset, ultra detailed, cinematic..." id="promptInput">
+      <button class="generate-btn" onclick="simulateGenerate()">Generate</button>
+    </div>
+
+    <div class="gen-options">
+      <div class="gen-option" onclick="toggleOption(this)">
+        ⚡ Fast Gen <span class="lc-cost">3 LC</span>
+      </div>
+      <div class="gen-option" onclick="toggleOption(this)">
+        🚫 No Watermark <span class="lc-cost">7 LC</span>
+      </div>
+    </div>
+
+    <div class="res-grid">
+      <div class="res-btn" onclick="selectRes(this)">100×100<span class="lc">0.5 LC</span></div>
+      <div class="res-btn active" onclick="selectRes(this)">200×200<span class="lc">1 LC</span></div>
+      <div class="res-btn" onclick="selectRes(this)">500×500<span class="lc">4 LC</span></div>
+      <div class="res-btn" onclick="selectRes(this)">512×1024<span class="lc">7 LC</span></div>
+      <div class="res-btn" onclick="selectRes(this)">1024×1024<span class="lc">10 LC</span></div>
+      <div class="res-btn" onclick="selectRes(this)">Custom<span class="lc">varies</span></div>
+    </div>
+
+    <div class="lc-balance">
+      <div class="lc-balance-left">
+        Your Balance: <span id="lcBalance">45 LC</span>
+      </div>
+      <a href="#pricing" class="lc-buy">Buy More LC →</a>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="pricing" id="pricing">
+  <div class="section-label" style="justify-content:center">LuxurCoin Packs</div>
+  <h2>Choose your <em>power</em></h2>
+  <p>Every pack is permanent · LCs never expire</p>
+
+  <div class="lc-rate">
+    Standard Rate: <strong>1 LC = ₹0.25</strong> · All packs offer better value
+  </div>
+
+  <div class="pricing-grid">
+    <div class="price-card reveal">
+      <div class="pack-name">Trial</div>
+      <div class="pack-lc">60 <span>LC</span></div>
+      <div class="pack-price">₹15</div>
+      <div class="pack-per">₹0.25/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+    <div class="price-card reveal">
+      <div class="pack-name">Starter</div>
+      <div class="pack-lc">100 <span>LC</span></div>
+      <div class="pack-price">₹22</div>
+      <div class="pack-per">₹0.22/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+    <div class="price-card reveal">
+      <div class="pack-name">Basic</div>
+      <div class="pack-lc">200 <span>LC</span></div>
+      <div class="pack-price">₹40</div>
+      <div class="pack-per">₹0.20/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+    <div class="price-card featured reveal">
+      <div class="pack-name">Popular</div>
+      <div class="pack-lc">350 <span>LC</span></div>
+      <div class="pack-price">₹65</div>
+      <div class="pack-per">₹0.186/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+  </div>
+
+  <div class="pricing-grid-2">
+    <div class="price-card reveal">
+      <div class="pack-name">Standard</div>
+      <div class="pack-lc">500 <span>LC</span></div>
+      <div class="pack-price">₹90</div>
+      <div class="pack-per">₹0.18/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+    <div class="price-card reveal">
+      <div class="pack-name">Plus</div>
+      <div class="pack-lc">750 <span>LC</span></div>
+      <div class="pack-price">₹130</div>
+      <div class="pack-per">₹0.173/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+    <div class="price-card reveal">
+      <div class="pack-name">Pro</div>
+      <div class="pack-lc">1000 <span>LC</span></div>
+      <div class="pack-price">₹160</div>
+      <div class="pack-per">₹0.16/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+  </div>
+
+  <div class="pricing-grid-2" style="margin-top:1px">
+    <div class="price-card reveal">
+      <div class="pack-name">Elite</div>
+      <div class="pack-lc">1500 <span>LC</span></div>
+      <div class="pack-price">₹220</div>
+      <div class="pack-per">₹0.147/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+    <div class="price-card reveal">
+      <div class="pack-name">Ultra</div>
+      <div class="pack-lc">2500 <span>LC</span></div>
+      <div class="pack-price">₹340</div>
+      <div class="pack-per">₹0.136/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+    <div class="price-card reveal">
+      <div class="pack-name">Mega 🐋</div>
+      <div class="pack-lc">5000 <span>LC</span></div>
+      <div class="pack-price">₹600</div>
+      <div class="pack-per">₹0.12/LC</div>
+      <a href="#" class="pack-btn">Buy Now</a>
+    </div>
+  </div>
+
+  <!-- Jumbo -->
+  <div class="jumbo-section reveal">
+    <div class="jumbo-glow"></div>
+    <div class="jumbo-inner">
+      <div class="jumbo-left">
+        <div class="jumbo-badge">🔥 Weekly Special</div>
+        <div class="jumbo-title">Jumbo <em>Week</em> Pack</div>
+        <p class="jumbo-desc">Our best deal — more LC than Mega at a lower price. Available every week. Don't miss it.</p>
+      </div>
+      <div class="jumbo-right">
+        <div class="jumbo-lc"><span>✦</span> 5050 LC</div>
+        <div class="jumbo-price">₹500</div>
+        <div class="jumbo-save">Save ₹100 vs Mega Pack · +50 LC Bonus</div>
+        <a href="#" class="jumbo-btn">Grab Jumbo Pack</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom -->
+  <div class="custom-lc reveal">
+    <div class="custom-lc-left">
+      <h3>Custom Amount</h3>
+      <p>Buy exactly what you need · Minimum 10 LC · 1 LC = ₹0.25</p>
+    </div>
+    <div class="custom-lc-right">
+      <div class="custom-input-wrap">
+        <input type="number" class="custom-lc-input" placeholder="10" min="10" id="customLcInput" oninput="updateCustomPrice()">
+        <span class="custom-price-display" id="customPrice">₹2.50</span>
+      </div>
+      <button class="custom-buy-btn">Buy LC</button>
+    </div>
+  </div>
+</section>
+
+<!-- Image Pricing -->
+<section class="img-pricing">
+  <div class="section-label" style="justify-content:center;margin-bottom:32px">Per Image Cost</div>
+  <h3>Pay per <em style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold)">generation</em></h3>
+  <div class="img-pricing-grid">
+    <div class="img-price-item reveal">
+      <div class="img-res">100 × 100</div>
+      <div class="img-lc">0.5</div>
+      <div class="img-lc-label">LC</div>
+    </div>
+    <div class="img-price-item reveal">
+      <div class="img-res">200 × 200</div>
+      <div class="img-lc">1</div>
+      <div class="img-lc-label">LC</div>
+    </div>
+    <div class="img-price-item reveal">
+      <div class="img-res">500 × 500</div>
+      <div class="img-lc">4</div>
+      <div class="img-lc-label">LC</div>
+    </div>
+    <div class="img-price-item reveal">
+      <div class="img-res">1024 × 1024</div>
+      <div class="img-lc">10</div>
+      <div class="img-lc-label">LC</div>
+    </div>
+    <div class="img-price-item reveal">
+      <div class="img-res">Custom Size</div>
+      <div class="img-lc">varies</div>
+      <div class="img-lc-label">LC</div>
+    </div>
+  </div>
+
+  <div class="addons-grid">
+    <div class="addon-item reveal">
+      <div class="addon-name">⚡ Fast Gen<small>Every 10th free</small></div>
+      <div class="addon-lc">3 LC</div>
+    </div>
+    <div class="addon-item reveal">
+      <div class="addon-name">🚫 No Watermark<small>Every 10th free</small></div>
+      <div class="addon-lc">7 LC</div>
+    </div>
+    <div class="addon-item reveal">
+      <div class="addon-name">📦 Bulk 5 Images<small>Save LC</small></div>
+      <div class="addon-lc">12 LC</div>
+    </div>
+  </div>
+</section>
+
+<!-- Loyalty -->
+<section class="loyalty">
+  <div class="section-label" style="justify-content:center">Rewards</div>
+  <h3>The more you create,<br><em style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold)">the more you earn</em></h3>
+  <div class="loyalty-grid">
+    <div class="loyalty-item reveal">
+      <div class="loyalty-icon">🎨</div>
+      <div class="loyalty-title">500 Images</div>
+      <div class="loyalty-desc">Generate 500 images total and we'll credit your wallet automatically.</div>
+      <div class="loyalty-reward">+0.5 LC Back</div>
+    </div>
+    <div class="loyalty-item reveal">
+      <div class="loyalty-icon">📅</div>
+      <div class="loyalty-title">Weekly Regular</div>
+      <div class="loyalty-desc">Use LuxurAI regularly for a full week and earn loyalty coins.</div>
+      <div class="loyalty-reward">+1 LC Back</div>
+    </div>
+    <div class="loyalty-item reveal">
+      <div class="loyalty-icon">⚡</div>
+      <div class="loyalty-title">10th Fast Gen</div>
+      <div class="loyalty-desc">Every 10th Fast Gen request is completely on us. Automatic.</div>
+      <div class="loyalty-reward">1 Free Use</div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Luxur<span>AI</span></div>
+  <div class="footer-text">
+    © 2025 LuxurAI · luxurai.in<br>
+    <span style="font-size:0.6rem;opacity:0.5">Available 9AM–7PM IST Daily</span>
+  </div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+<!-- Queue Toast -->
+<div class="queue-toast" id="queueToast">
+  <div class="queue-title">✦ Generating your image</div>
+  <div class="queue-status" id="queueStatus">Joining queue... position #2</div>
+  <div class="queue-progress">
+    <div class="queue-progress-bar" id="queueBar"></div>
+  </div>
+</div>
+
+<!-- Signup Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="hideModal()">✕</button>
+    <div class="modal-title">Start <em>Creating</em></div>
+    <p class="modal-sub">Sign in with Google to access LuxurAI. No credit card required.</p>
+    <div class="modal-bonus">
+      <strong>✦ 45 LC Free</strong>
+      Worth ₹11.25 · Start generating instantly
+    </div>
+    <a href="#" class="google-btn">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continue with Google
+    </a>
+  </div>
+</div>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx - 4 + 'px';
+    cursor.style.top = my - 4 + 'px';
+  });
+
+  function animRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) *.12;
+    ring.style.left = rx - 18 + 'px';
+    ring.style.top = ry - 18 + 'px';
+    requestAnimationFrame(animRing);
+  }
+  animRing();
+
+  document.querySelectorAll('a, button, .gen-option, .res-btn, .price-card').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'scale(2.5)';
+      ring.style.transform = 'scale(1.5)';
+      ring.style.opacity = '0.3';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'scale(1)';
+      ring.style.transform = 'scale(1)';
+      ring.style.opacity = '0.6';
+    });
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+
+  // Modal
+  function showModal() { document.getElementById('modalOverlay').classList.add('show'); }
+  function hideModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+  function handleOverlayClick(e) { if (e.target === e.currentTarget) hideModal(); }
+
+  // Gen options toggle
+  function toggleOption(el) { el.classList.toggle('active'); }
+
+  // Res selector
+  function selectRes(el) {
+    document.querySelectorAll('.res-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Custom LC price
+  function updateCustomPrice() {
+    const val = Math.max(10, parseInt(document.getElementById('customLcInput').value) || 10);
+    document.getElementById('customPrice').textContent = '₹' + (val * 0.25).toFixed(2);
+  }
+
+  // Simulate generate
+  function simulateGenerate() {
+    const prompt = document.getElementById('promptInput').value;
+    if (!prompt) { document.getElementById('promptInput').focus(); return; }
+
+    const toast = document.getElementById('queueToast');
+    const bar = document.getElementById('queueBar');
+    const status = document.getElementById('queueStatus');
+
+    toast.classList.add('show');
+    status.textContent = 'Joining queue... position #2';
+    bar.style.width = '0%';
+
+    setTimeout(() => {
+      status.textContent = 'Processing your prompt...';
+      bar.style.width = '30%';
+    }, 1500);
+
+    setTimeout(() => {
+      status.textContent = 'Generating image...';
+      bar.style.width = '65%';
+    }, 4000);
+
+    setTimeout(() => {
+      status.textContent = '✓ Complete! Sign in to download.';
+      bar.style.width = '100%';
+    }, 8000);
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      showModal();
+    }, 10000);
+  }
+
+  // LC balance simulation
+  let lcBal = 45;
+  document.querySelectorAll('.res-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const lc = parseFloat(btn.querySelector('.lc').textContent);
+      if (!isNaN(lc)) {
+        lcBal = Math.max(0, lcBal - lc);
+        document.getElementById('lcBalance').textContent = lcBal + ' LC';
+      }
+    });
+  });
+</script>
+</body>
+</html>
