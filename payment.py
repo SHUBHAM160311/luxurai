@@ -15,7 +15,7 @@ import time
 import base64
 
 import database as db
-from routes.auth import get_current_user
+from Auth import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
