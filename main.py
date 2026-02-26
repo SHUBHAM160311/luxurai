@@ -13,10 +13,10 @@ import os
 from pathlib import Path
 
 from database import init_db
-from routes.auth import router as auth_router
-from routes.wallet import router as wallet_router
-from routes.generate import router as generate_router
-from routes.payment import router as payment_router
+from Auth import router as auth_router
+from Wallet import router as wallet_router
+from Generate import router as generate_router
+from Payment import router as payment_router
 from queue_manager import QueueManager
 
 # ==================== LOGGING ====================
@@ -84,4 +84,5 @@ if __name__ == "__main__":
         port=8000,
         reload=False,
         workers=1  # Single worker for JAX GPU
+
     )
