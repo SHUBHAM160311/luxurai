@@ -5,7 +5,7 @@ LC balance, transaction history, loyalty rewards
 
 from fastapi import APIRouter, Depends, HTTPException
 import database as db
-from routes.auth import get_current_user
+from Auth import get_current_user
 
 router = APIRouter()
 
@@ -70,4 +70,5 @@ async def get_loyalty_stats(current_user: dict = Depends(get_current_user)):
         "images_to_next_milestone": images_to_milestone,
         "fast_gen_to_free": fast_gen_to_free,
         "no_wm_to_free": no_wm_to_free
+
     }
