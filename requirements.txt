@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-dotenv
+httpx
+python-jose[cryptography]
+passlib[bcrypt]
+aiofiles
