@@ -12,7 +12,7 @@ import logging
 import os
 from pathlib import Path
 
-from database import init_db
+from Database import init_db
 from Auth import router as auth_router
 from Wallet import router as wallet_router
 from Generate import router as generate_router
@@ -86,3 +86,4 @@ if __name__ == "__main__":
         workers=1  # Single worker for JAX GPU
 
     )
+
