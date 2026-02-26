@@ -1,0 +1,24 @@
+# Environment variables
+.env
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+
+# Generated images
+outputs/*.png
+outputs/*.jpg
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
