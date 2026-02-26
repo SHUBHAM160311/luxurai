@@ -12,7 +12,7 @@ import logging
 import os
 from pathlib import Path
 
-from Database import init_db
+from database import init_db
 from Auth import router as auth_router
 from Wallet import router as wallet_router
 from Generate import router as generate_router
