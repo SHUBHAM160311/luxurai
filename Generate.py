@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 
 import database as db
-from routes.auth import get_current_user
+from Auth import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -290,4 +290,5 @@ async def get_pricing():
             "no_watermark": 7.0,
         },
         "lc_rate_inr": 0.25
+
     }
