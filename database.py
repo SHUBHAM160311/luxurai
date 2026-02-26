@@ -435,4 +435,5 @@ def increment_no_wm_count(user_id: int):
         (user_id,)
     )
     conn.commit()
+
     conn.close()
