@@ -3,7 +3,7 @@ LuxurAI Auth Routes
 Gmail OAuth via Google Identity
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 import httpx
 import jwt
@@ -156,4 +156,5 @@ async def logout():
     """Logout (client should delete token)"""
 
     return {"message": "Logged out successfully"}
+
 
