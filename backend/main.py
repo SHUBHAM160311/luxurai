@@ -55,13 +55,13 @@ async def lifespan(app: FastAPI):
 
     # Init all tables in correct order
     # (users first — others have foreign keys to it)
-    from auth     import init_db           as init_auth_tables
-    from wallet  import init_wallet_tables
-    from jobs    import init_job_tables
-    from ux      import init_ux_tables
-    from referral import init_referral_tables
-    from loyalty  import init_loyalty_tables
-    from admin    import init_admin_tables
+    from backend.auth     import init_db           as init_auth_tables
+    from backend.wallet   import init_wallet_tables
+    from backend.jobs     import init_job_tables
+    from backend.ux       import init_ux_tables
+    from backend.referral import init_referral_tables
+    from backend.loyalty  import init_loyalty_tables
+    from backend.admin    import init_admin_tables
 
     await init_auth_tables()
     logger.info("✓ Auth tables ready")
@@ -109,7 +109,7 @@ async def lifespan(app: FastAPI):
     import asyncio
     if os.getenv("RUNPOD_API_KEY") and os.getenv("RUNPOD_ENDPOINT_ID"):
         try:
-            from worker.generator import start_worker
+            from backend.worker.generator import start_worker
             worker_task = asyncio.create_task(start_worker())
             logger.info("✓ RunPod worker started")
         except Exception as e:
@@ -156,31 +156,31 @@ from backend.auth import app as auth_app
 app.mount("/api/auth", auth_app)
 
 # Payment routes → /api/payment/*
-from payment import router as payment_router
+from backend.payment import router as payment_router
 app.include_router(payment_router)
 
 # Dashboard / UX routes → /api/ux/*
-from ux import router as ux_router
+from backend.ux import router as ux_router
 app.include_router(ux_router)
 
 # Referral routes → /api/referral/*
-from referral import router as referral_router
+from backend.referral import router as referral_router
 app.include_router(referral_router)
 
 # Loyalty routes → /api/loyalty/*
-from loyalty import router as loyalty_router
+from backend.loyalty import router as loyalty_router
 app.include_router(loyalty_router)
 
 # Jobs routes → /api/jobs/*
 try:
-    from jobs import router as jobs_router
+    from backend.jobs import router as jobs_router
     if jobs_router:
         app.include_router(jobs_router, prefix="/api")
 except Exception as e:
     logger.warning(f"Jobs router not loaded: {e}")
 
 # Admin routes → /api/admin/*
-from admin import router as admin_router
+from backend.admin import router as admin_router
 app.include_router(admin_router)
 
 
