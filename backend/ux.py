@@ -439,7 +439,7 @@ async def subscribe_api_key(request: Request):
     Deducts 2 LC from wallet and records subscription in DB.
     Call this once per month per user (frontend handles renewal reminder).
     """
-    from wallet import get_api_subscription_cost, REASON_API_CALL
+    from backend.wallet import get_api_subscription_cost, REASON_API_CALL  
     user_id = await get_current_user(request)
 
     sub_cost = get_api_subscription_cost()   # 2 LC
