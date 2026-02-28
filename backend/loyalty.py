@@ -40,7 +40,7 @@ from fastapi import APIRouter, Request, HTTPException
 from jose import JWTError, jwt
 from dotenv import load_dotenv
 
-from wallet import WalletService, REASON_LOYALTY
+from backend.wallet import WalletService, REASON_LOYALTY
 
 load_dotenv()
 
