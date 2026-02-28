@@ -1,0 +1,26 @@
+# LuxurAI — requirements.txt
+# Install: pip install -r requirements.txt
+
+# ── Web Framework ─────────────────────────────
+fastapi
+uvicorn[standard]
+pydantic
+
+# ── Database ──────────────────────────────────
+aiosqlite
+
+# ── Auth / JWT ────────────────────────────────
+python-jose[cryptography]
+python-multipart
+
+# ── HTTP Client ───────────────────────────────
+httpx
+
+# ── Environment ───────────────────────────────
+python-dotenv
+
+# ── S3 / Storage ──────────────────────────────
+boto3
+
+# ── Email (Resend) ────────────────────────────
+resend
