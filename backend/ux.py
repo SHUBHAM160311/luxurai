@@ -761,3 +761,4 @@ async def _record_api_key_usage(full_key: str):
             (_now(), key_hash)
         )
         await db.commit()
+
