@@ -2,21 +2,7 @@
 LuxurAI — auth.py
 ─────────────────────────────────────────────────────────────────
 Authentication backend: Google OAuth + Passwordless Magic Link
-Stack: FastAPI · SQLite (swap to Postgres in prod) · Resend (email)
-
-Run:
-    pip install fastapi uvicorn[standard] python-jose[cryptography] \
-                httpx resend python-dotenv aiosqlite passlib bcrypt
-    uvicorn auth:app --reload --port 8000
-
-.env file required:
-    SECRET_KEY=your-super-secret-key-min-32-chars
-    GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
-    GOOGLE_CLIENT_SECRET=xxx
-    RESEND_API_KEY=re_xxx
-    EMAIL_FROM=noreply@luxurai.in
-    BASE_URL=https://luxurai.in
-    FRONTEND_URL=https://luxurai.in
+─────────────────────────────────────────────────────────────────
 """
 
 import os, secrets, hashlib, asyncio
@@ -37,22 +23,22 @@ load_dotenv()
 # ─────────────────────────────────────────────
 # Config
 # ─────────────────────────────────────────────
-SECRET_KEY         = os.getenv("SECRET_KEY", "dev-secret-change-in-production-32chars!")
-GOOGLE_CLIENT_ID   = os.getenv("GOOGLE_CLIENT_ID", "")
+SECRET_KEY           = os.getenv("SECRET_KEY", "dev-secret-change-in-production-32chars!")
+GOOGLE_CLIENT_ID     = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
-RESEND_API_KEY     = os.getenv("RESEND_API_KEY", "")
-EMAIL_FROM         = os.getenv("EMAIL_FROM", "noreply@luxurai.in")
-BASE_URL           = os.getenv("BASE_URL", "https://luxurai.in")
-FRONTEND_URL       = os.getenv("FRONTEND_URL", "https://luxurai.in")
+RESEND_API_KEY       = os.getenv("RESEND_API_KEY", "")
+EMAIL_FROM           = os.getenv("EMAIL_FROM", "noreply@luxurai.in")
+BASE_URL             = os.getenv("BASE_URL", "https://luxurai.in")
+FRONTEND_URL         = os.getenv("FRONTEND_URL", "https://luxurai.in")
 
 ALGORITHM          = "HS256"
 SESSION_DAYS       = 30
 MAGIC_LINK_MINUTES = 10
 SIGNUP_BONUS_LC    = 45
-RATE_LIMIT_HOURLY  = 3     # magic links per hour per email
-RATE_LIMIT_DAILY   = 10    # magic links per day per email
+RATE_LIMIT_HOURLY  = 3
+RATE_LIMIT_DAILY   = 10
 
-DB_PATH = "luxurai.db"
+DB_PATH = os.getenv("DB_PATH", "luxurai.db")
 
 
 # ─────────────────────────────────────────────
@@ -166,7 +152,6 @@ async def create_user(db, email: str, provider: str = "email", google_id: str = 
         "INSERT INTO users (id, email, provider, google_id, created_at) VALUES (?,?,?,?,?)",
         (user_id, email, provider, google_id, ts)
     )
-    # Initialize wallet with signup bonus
     await db.execute(
         "INSERT INTO wallets (user_id, balance_lc) VALUES (?,?)",
         (user_id, SIGNUP_BONUS_LC)
@@ -194,10 +179,9 @@ async def create_session(db, user_id: str, request: Request) -> str:
 
 
 # ─────────────────────────────────────────────
-# Rate limiting for magic links
+# Rate limiting
 # ─────────────────────────────────────────────
 async def check_magic_link_rate(db, email: str) -> bool:
-    """Returns True if allowed, False if rate limited."""
     now = datetime.now(timezone.utc)
     one_hour_ago = (now - timedelta(hours=1)).isoformat()
     one_day_ago  = (now - timedelta(days=1)).isoformat()
@@ -232,10 +216,6 @@ async def record_magic_link_send(db, email: str):
 # Email via Resend
 # ─────────────────────────────────────────────
 async def send_magic_email(email: str, link: str):
-    """
-    Sends the LuxurAI magic link email.
-    Premium style — minimal, no fluff.
-    """
     html_body = f"""
 <!DOCTYPE html>
 <html>
@@ -249,12 +229,7 @@ async def send_magic_email(email: str, link: str):
   .line {{ width:40px; height:1px; background:#C9A84C; opacity:0.4; margin-bottom:32px; }}
   h1 {{ font-size:28px; font-weight:300; color:#F8F4ED; line-height:1.3; margin:0 0 20px; letter-spacing:-0.01em; }}
   p {{ font-size:13px; color:#888070; line-height:1.8; margin:0 0 36px; letter-spacing:0.02em; }}
-  .btn {{
-    display:inline-block; background:#C9A84C; color:#080808;
-    text-decoration:none; padding:14px 40px;
-    font-size:11px; font-weight:500; letter-spacing:0.2em; text-transform:uppercase;
-    margin-bottom:40px;
-  }}
+  .btn {{ display:inline-block; background:#C9A84C; color:#080808; text-decoration:none; padding:14px 40px; font-size:11px; font-weight:500; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:40px; }}
   .note {{ font-size:11px; color:#555; letter-spacing:0.08em; line-height:1.7; border-top:1px solid #1E1E1E; padding-top:24px; }}
   .footer {{ font-size:10px; color:#333; letter-spacing:0.15em; margin-top:48px; }}
 </style>
@@ -276,11 +251,7 @@ async def send_magic_email(email: str, link: str):
 </html>
 """
     if not RESEND_API_KEY:
-        # Dev mode: print to console
-        print(f"\n{'='*60}")
-        print(f"[DEV] Magic link for {email}:")
-        print(f"  {link}")
-        print(f"{'='*60}\n")
+        print(f"\n[DEV] Magic link for {email}:\n  {link}\n")
         return
 
     async with httpx.AsyncClient() as client:
@@ -298,6 +269,9 @@ async def send_magic_email(email: str, link: str):
 
 # ─────────────────────────────────────────────
 # FastAPI app
+# NOTE: Routes are WITHOUT /api/auth prefix
+# because main.py mounts this app at /api/auth
+# So /health here becomes /api/auth/health
 # ─────────────────────────────────────────────
 app = FastAPI(title="LuxurAI Auth", version="1.0.0")
 
@@ -314,20 +288,13 @@ async def startup():
     await init_db()
 
 
-# ─────────────────────────────────────────────
-# Pydantic schemas
-# ─────────────────────────────────────────────
 class MagicLinkRequest(BaseModel):
     email: EmailStr
     resend: bool = False
 
 
-# ─────────────────────────────────────────────
-# Routes
-# ─────────────────────────────────────────────
-
 # ── Health ────────────────────────────────────
-@app.get("/api/auth/health")
+@app.get("/health")
 async def health():
     return {
         "status":  "ok",
@@ -337,14 +304,9 @@ async def health():
     }
 
 
-# ── /me — used by every frontend page ─────────
-@app.get("/api/auth/me")
+# ── /me ───────────────────────────────────────
+@app.get("/me")
 async def get_me(request: Request):
-    """
-    Frontend calls this on every page load.
-    Returns user info + balance if logged in.
-    Returns 401 if not authenticated.
-    """
     token = get_session_token(request)
     if not token:
         raise HTTPException(401, "Not authenticated")
@@ -367,16 +329,16 @@ async def get_me(request: Request):
         await db.commit()
 
     return {
-        "id":          user["id"],
-        "email":       user["email"],
-        "provider":    user["provider"],
-        "balance_lc":  lc,
-        "is_new":      False,
+        "id":         user["id"],
+        "email":      user["email"],
+        "provider":   user["provider"],
+        "balance_lc": lc,
+        "is_new":     False,
     }
 
 
-# ── Session check ─────────────────────────────
-@app.get("/api/auth/session")
+# ── Session ───────────────────────────────────
+@app.get("/session")
 async def get_session(request: Request):
     token = get_session_token(request)
     if not token:
@@ -393,7 +355,6 @@ async def get_session(request: Request):
         if not user or user["is_blocked"]:
             raise HTTPException(401, "User not found or blocked")
         lc = await get_wallet(db, user_id)
-        # Touch last_seen on session
         await db.execute(
             "UPDATE sessions SET last_seen = ? WHERE user_id = ? AND revoked = 0",
             (now_utc(), user_id)
@@ -402,39 +363,34 @@ async def get_session(request: Request):
 
     return {
         "user": {
-            "id": user["id"],
-            "email": user["email"],
-            "provider": user["provider"],
+            "id":         user["id"],
+            "email":      user["email"],
+            "provider":   user["provider"],
             "lc_balance": lc,
         }
     }
 
 
 # ── Magic Link: send ──────────────────────────
-@app.post("/api/auth/magic-link")
+@app.post("/magic-link")
 async def send_magic_link(payload: MagicLinkRequest, request: Request):
     email = payload.email.lower().strip()
 
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
 
-        # Rate limit check
         allowed = await check_magic_link_rate(db, email)
         if not allowed:
             return JSONResponse({"error": "rate_limit"}, status_code=429)
 
-        # Find or note user (don't create yet — create on verify)
         await record_magic_link_send(db, email)
 
-        # Generate token
-        raw_token = secrets.token_urlsafe(48)
+        raw_token  = secrets.token_urlsafe(48)
         token_hash = hash_token(raw_token)
-        expires = (datetime.now(timezone.utc) + timedelta(minutes=MAGIC_LINK_MINUTES)).isoformat()
+        expires    = (datetime.now(timezone.utc) + timedelta(minutes=MAGIC_LINK_MINUTES)).isoformat()
 
-        # Get or create a placeholder user id to store token against
         user = await get_user_by_email(db, email)
         if not user:
-            # Create user now (wallet credited on first verify)
             user_id = uuid4()
             ts = now_utc()
             await db.execute(
@@ -454,12 +410,11 @@ async def send_magic_link(payload: MagicLinkRequest, request: Request):
 
     link = f"{BASE_URL}/api/auth/verify?token={raw_token}"
     await send_magic_email(email, link)
-
     return {"success": True}
 
 
 # ── Magic Link: verify ────────────────────────
-@app.get("/api/auth/verify")
+@app.get("/verify")
 async def verify_magic_link(token: str, request: Request, response: Response):
     token_hash = hash_token(token)
     now = now_utc()
@@ -479,15 +434,13 @@ async def verify_magic_link(token: str, request: Request, response: Response):
         if row["expires_at"] < now:
             raise HTTPException(400, "Link expired · Request a new one")
 
-        # Mark used
         await db.execute(
             "UPDATE auth_tokens SET used = 1 WHERE token_hash = ?", (token_hash,)
         )
 
         user_id = row["user_id"]
-        user = await get_user_by_id(db, user_id)
+        user    = await get_user_by_id(db, user_id)
 
-        # Check if wallet exists (first login)
         async with db.execute(
             "SELECT balance_lc FROM wallets WHERE user_id = ?", (user_id,)
         ) as cur:
@@ -508,24 +461,16 @@ async def verify_magic_link(token: str, request: Request, response: Response):
             lc_balance = wallet_row["balance_lc"]
 
         await update_last_login(db, user_id)
-
-        # Detect new device (compare stored IP / UA)
-        current_ua = request.headers.get("user-agent", "")
-        known_ua = row["user_agent"] or ""
-        new_device = known_ua and known_ua[:30] != current_ua[:30]
-
         session_id = await create_session(db, user_id, request)
         await db.commit()
 
     jwt_token = make_jwt({"sub": user_id}, timedelta(days=SESSION_DAYS))
-    resp = RedirectResponse(
-        url=(
-            f"{FRONTEND_URL}/pages/dashboard.html?welcome=1&new=1"
-            if is_new
-            else f"{FRONTEND_URL}/pages/dashboard.html"
-        ),
-        status_code=302
+    redirect_url = (
+        f"{FRONTEND_URL}/pages/dashboard.html?welcome=1&new=1"
+        if is_new
+        else f"{FRONTEND_URL}/pages/dashboard.html"
     )
+    resp = RedirectResponse(url=redirect_url, status_code=302)
     resp.set_cookie(
         key      = "luxurai_session",
         value    = jwt_token,
@@ -538,10 +483,9 @@ async def verify_magic_link(token: str, request: Request, response: Response):
 
 
 # ── Google OAuth: initiate ────────────────────
-@app.get("/api/auth/google")
+@app.get("/google")
 async def google_auth_init(request: Request):
     if not GOOGLE_CLIENT_ID:
-        # Dev fallback — redirect to magic link page
         return RedirectResponse(url=f"{FRONTEND_URL}?auth_error=google_not_configured")
 
     redirect_uri = f"{BASE_URL}/api/auth/google/callback"
@@ -561,23 +505,22 @@ async def google_auth_init(request: Request):
 
 
 # ── Google OAuth: callback ────────────────────
-@app.get("/api/auth/google/callback")
+@app.get("/google/callback")
 async def google_auth_callback(code: str, state: str, request: Request):
     if not GOOGLE_CLIENT_ID:
         raise HTTPException(503, "Google OAuth not configured")
 
     redirect_uri = f"{BASE_URL}/api/auth/google/callback"
 
-    # Exchange code for tokens
     async with httpx.AsyncClient() as client:
         token_res = await client.post(
             "https://oauth2.googleapis.com/token",
             data={
-                "code": code,
-                "client_id": GOOGLE_CLIENT_ID,
+                "code":          code,
+                "client_id":     GOOGLE_CLIENT_ID,
                 "client_secret": GOOGLE_CLIENT_SECRET,
-                "redirect_uri": redirect_uri,
-                "grant_type": "authorization_code",
+                "redirect_uri":  redirect_uri,
+                "grant_type":    "authorization_code",
             }
         )
         token_data = token_res.json()
@@ -587,14 +530,13 @@ async def google_auth_callback(code: str, state: str, request: Request):
 
         access_token = token_data["access_token"]
 
-        # Fetch user info
         userinfo_res = await client.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
             headers={"Authorization": f"Bearer {access_token}"}
         )
         userinfo = userinfo_res.json()
 
-    email = userinfo.get("email", "").lower()
+    email     = userinfo.get("email", "").lower()
     google_id = userinfo.get("id", "")
 
     if not email:
@@ -603,15 +545,14 @@ async def google_auth_callback(code: str, state: str, request: Request):
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
 
-        user = await get_user_by_email(db, email)
+        user   = await get_user_by_email(db, email)
         is_new = user is None
 
         if is_new:
-            user = await create_user(db, email, provider="google", google_id=google_id)
+            user    = await create_user(db, email, provider="google", google_id=google_id)
             user_id = user["id"]
         else:
             user_id = user["id"]
-            # Update google_id if missing
             if not user.get("google_id"):
                 await db.execute(
                     "UPDATE users SET google_id = ?, provider = 'google' WHERE id = ?",
@@ -619,20 +560,16 @@ async def google_auth_callback(code: str, state: str, request: Request):
                 )
                 await db.commit()
 
-        lc_balance = await get_wallet(db, user_id)
         await update_last_login(db, user_id)
-        session_id = await create_session(db, user_id, request)
+        await create_session(db, user_id, request)
         await db.commit()
 
     jwt_token = make_jwt({"sub": user_id}, timedelta(days=SESSION_DAYS))
-
-    # Redirect with flags: new user gets welcome, returning gets dashboard
     redirect_url = (
         f"{FRONTEND_URL}/pages/dashboard.html?welcome=1&new=1"
         if is_new
         else f"{FRONTEND_URL}/pages/dashboard.html"
     )
-
     resp = RedirectResponse(url=redirect_url, status_code=302)
     resp.set_cookie(
         key      = "luxurai_session",
@@ -646,7 +583,7 @@ async def google_auth_callback(code: str, state: str, request: Request):
 
 
 # ── Sign out ──────────────────────────────────
-@app.post("/api/auth/signout")
+@app.post("/signout")
 async def signout(request: Request, response: Response):
     token = get_session_token(request)
     if token:
@@ -664,8 +601,8 @@ async def signout(request: Request, response: Response):
     return {"success": True}
 
 
-# ── Sign out all devices ──────────────────────
-@app.post("/api/auth/signout-all")
+# ── Sign out all ──────────────────────────────
+@app.post("/signout-all")
 async def signout_all(request: Request, response: Response):
     token = get_session_token(request)
     if not token:
@@ -682,11 +619,11 @@ async def signout_all(request: Request, response: Response):
         )
         await db.commit()
     response.delete_cookie("luxurai_session")
-    return {"success": True, "message": "All sessions revoked"}
+    return {"success": True}
 
 
-# ── Active sessions list ──────────────────────
-@app.get("/api/auth/sessions")
+# ── Sessions list ─────────────────────────────
+@app.get("/sessions")
 async def list_sessions(request: Request):
     token = get_session_token(request)
     if not token:
@@ -710,8 +647,8 @@ async def list_sessions(request: Request):
     return {"sessions": [dict(r) for r in rows]}
 
 
-# ── Wallet balance ────────────────────────────
-@app.get("/api/auth/wallet")
+# ── Wallet ────────────────────────────────────
+@app.get("/wallet")
 async def get_wallet_balance(request: Request):
     token = get_session_token(request)
     if not token:
