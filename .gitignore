@@ -1,0 +1,53 @@
+# ─────────────────────────────────────────────
+# LuxurAI — .gitignore
+# ─────────────────────────────────────────────
+
+# SECRET FILES — NEVER COMMIT THESE
+.env
+*.env
+CashFree.env
+secrets.env
+config.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Node / Frontend
+node_modules/
+.next/
+out/
+dist/
+.cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Generated images (store in S3, not git)
+generated/
+uploads/
+output_images/

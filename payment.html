@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LuxurAI — Top Up LC</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#C9A84C; --gold-light:#E8C97A; --gold-pale:#F5E6C0;
+    --black:#080808; --black-2:#0F0F0F; --black-3:#161616; --black-4:#1E1E1E;
+    --white:#F8F4ED; --white-dim:#C8C0B0; --gray:#888070;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Montserrat',sans-serif; font-weight:300; min-height:100vh; }
+
+  /* NAV */
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:20px 60px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(201,168,76,0.1); background:rgba(8,8,8,0.92); backdrop-filter:blur(20px); }
+  .logo { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:600; letter-spacing:0.15em; color:var(--gold); text-decoration:none; }
+  .logo span { color:var(--white); font-weight:300; }
+  .nav-right { display:flex; align-items:center; gap:20px; }
+  .nav-balance { font-size:0.72rem; color:var(--white-dim); letter-spacing:0.1em; }
+  .nav-balance strong { color:var(--gold); }
+  .back-link { color:var(--gray); font-size:0.7rem; letter-spacing:0.15em; text-decoration:none; transition:color 0.3s; }
+  .back-link:hover { color:var(--white); }
+
+  /* PAGE */
+  .page { max-width:980px; margin:0 auto; padding:120px 40px 80px; }
+  .page-header { text-align:center; margin-bottom:60px; }
+  .page-eyebrow { font-size:0.62rem; letter-spacing:0.4em; text-transform:uppercase; color:var(--gold); margin-bottom:20px; }
+  .page-title { font-family:'Cormorant Garamond',serif; font-size:clamp(2.5rem,5vw,4rem); font-weight:300; line-height:1.1; }
+  .page-title em { font-style:italic; color:var(--gold); }
+  .page-sub { color:var(--gray); font-size:0.78rem; letter-spacing:0.1em; margin-top:16px; line-height:1.8; }
+
+  /* PACKS GRID */
+  .packs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; margin-bottom:2px; }
+  .packs-grid-2 { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; }
+  .pack-card { background:var(--black-3); border:1px solid rgba(201,168,76,0.08); padding:28px 24px; transition:all 0.3s; cursor:pointer; position:relative; }
+  .pack-card:hover, .pack-card.selected { border-color:rgba(201,168,76,0.35); background:var(--black-4); }
+  .pack-card.selected::before { content:'✓'; position:absolute; top:12px; right:14px; font-size:0.7rem; color:var(--gold); }
+  .pack-card.popular { border-color:rgba(201,168,76,0.2); }
+  .pack-badge { position:absolute; top:-1px; left:50%; transform:translateX(-50%); background:var(--gold); color:var(--black); font-size:0.55rem; letter-spacing:0.2em; padding:3px 12px; text-transform:uppercase; font-weight:500; white-space:nowrap; }
+  .pack-name { font-size:0.65rem; letter-spacing:0.25em; text-transform:uppercase; color:var(--gray); margin-bottom:12px; }
+  .pack-lc { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; color:var(--white); line-height:1; }
+  .pack-lc span { font-size:0.9rem; color:var(--gray); margin-left:4px; }
+  .pack-price { font-size:1.2rem; color:var(--gold); margin-top:8px; font-weight:500; }
+  .pack-per { font-size:0.62rem; color:var(--gray); margin-top:4px; letter-spacing:0.05em; }
+  .pack-save { font-size:0.6rem; color:#7dd87d; margin-top:4px; }
+
+  /* JUMBO */
+  .jumbo-card { background:var(--black-3); border:1px solid rgba(201,168,76,0.2); padding:32px 40px; margin-top:2px; display:grid; grid-template-columns:1fr auto; align-items:center; gap:40px; cursor:pointer; transition:all 0.3s; position:relative; }
+  .jumbo-card:hover, .jumbo-card.selected { border-color:rgba(201,168,76,0.5); }
+  .jumbo-card.selected::before { content:'✓ Selected'; position:absolute; top:14px; right:20px; font-size:0.65rem; color:var(--gold); letter-spacing:0.15em; }
+  .jumbo-badge { display:inline-block; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2); color:var(--gold); padding:4px 14px; font-size:0.6rem; letter-spacing:0.2em; margin-bottom:10px; }
+  .jumbo-title { font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:300; }
+  .jumbo-title em { font-style:italic; color:var(--gold); }
+  .jumbo-desc { font-size:0.72rem; color:var(--gray); letter-spacing:0.05em; margin-top:8px; line-height:1.7; }
+  .jumbo-right { text-align:right; }
+  .jumbo-lc { font-family:'Cormorant Garamond',serif; font-size:2.2rem; color:var(--white); }
+  .jumbo-price { font-size:1.5rem; color:var(--gold); font-weight:500; }
+  .jumbo-save { font-size:0.62rem; color:#7dd87d; margin-top:4px; letter-spacing:0.05em; }
+
+  /* CUSTOM */
+  .custom-card { background:var(--black-3); border:1px solid rgba(201,168,76,0.08); padding:28px 32px; margin-top:2px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+  .custom-left h3 { font-size:0.78rem; letter-spacing:0.1em; margin-bottom:6px; }
+  .custom-left p { font-size:0.68rem; color:var(--gray); letter-spacing:0.05em; }
+  .custom-right { display:flex; align-items:center; gap:12px; }
+  .custom-input { background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.15); color:var(--white); padding:12px 16px; font-family:'Montserrat',sans-serif; font-size:0.82rem; width:120px; outline:none; text-align:center; transition:border-color 0.3s; }
+  .custom-input:focus { border-color:rgba(201,168,76,0.4); }
+  .custom-price-disp { font-size:1rem; color:var(--gold); min-width:80px; text-align:right; }
+  .custom-select-btn { background:transparent; border:1px solid rgba(201,168,76,0.25); color:var(--gold); padding:12px 20px; font-family:'Montserrat',sans-serif; font-size:0.68rem; letter-spacing:0.15em; cursor:pointer; transition:all 0.3s; }
+  .custom-select-btn:hover { background:rgba(201,168,76,0.08); }
+
+  /* CHECKOUT PANEL */
+  .checkout-panel { position:sticky; bottom:0; background:rgba(8,8,8,0.96); border-top:1px solid rgba(201,168,76,0.12); padding:20px 40px; display:flex; align-items:center; justify-content:space-between; backdrop-filter:blur(20px); margin:0 -40px; transform:translateY(100px); opacity:0; transition:all 0.4s ease; }
+  .checkout-panel.show { transform:translateY(0); opacity:1; }
+  .checkout-info { display:flex; align-items:center; gap:32px; }
+  .checkout-lc { font-family:'Cormorant Garamond',serif; font-size:1.8rem; color:var(--gold); }
+  .checkout-lc span { font-size:0.9rem; color:var(--gray); margin-left:4px; }
+  .checkout-price { font-size:1.2rem; color:var(--white); }
+  .checkout-pack { font-size:0.65rem; color:var(--gray); letter-spacing:0.15em; text-transform:uppercase; margin-top:2px; }
+  .checkout-btn { background:var(--gold); color:var(--black); padding:14px 48px; font-family:'Montserrat',sans-serif; font-size:0.78rem; font-weight:500; letter-spacing:0.2em; text-transform:uppercase; border:none; cursor:pointer; transition:background 0.3s; }
+  .checkout-btn:hover { background:var(--gold-light); }
+  .checkout-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .checkout-note { font-size:0.6rem; color:var(--gray); margin-top:4px; letter-spacing:0.05em; }
+
+  /* SUCCESS BANNER */
+  .success-banner { background:rgba(80,180,90,0.08); border:1px solid rgba(80,180,90,0.2); padding:24px 32px; text-align:center; display:none; margin-bottom:32px; }
+  .success-banner.show { display:block; }
+  .success-title { font-size:0.8rem; letter-spacing:0.2em; text-transform:uppercase; color:#7dd87d; margin-bottom:8px; }
+  .success-sub { font-size:0.72rem; color:var(--white-dim); }
+
+  /* LOADING */
+  .loading { text-align:center; padding:60px; color:var(--gray); font-size:0.75rem; letter-spacing:0.15em; }
+
+  .section-divider { border:none; border-top:1px solid rgba(201,168,76,0.08); margin:40px 0; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/pages/index.html" class="logo">Luxur<span>AI</span></a>
+  <div class="nav-right">
+    <div class="nav-balance">Balance: <strong id="navBalance">—</strong> LC</div>
+    <a href="/pages/dashboard.html" class="back-link">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="page-eyebrow">LuxurCredits</div>
+    <div class="page-title">Top Up Your <em>Wallet</em></div>
+    <div class="page-sub">Select a pack · Pay securely with Cashfree · LC credited instantly</div>
+  </div>
+
+  <!-- Success Banner (shown after payment return) -->
+  <div class="success-banner" id="successBanner">
+    <div class="success-title">✓ Payment Successful</div>
+    <div class="success-sub">Your LC have been credited. Start generating!</div>
+  </div>
+
+  <!-- Packs loading state -->
+  <div id="packsContainer"><div class="loading">Loading packs...</div></div>
+
+  <!-- Checkout Panel -->
+  <div class="checkout-panel" id="checkoutPanel">
+    <div class="checkout-info">
+      <div>
+        <div class="checkout-lc" id="checkoutLc">— <span>LC</span></div>
+        <div class="checkout-pack" id="checkoutPack">—</div>
+      </div>
+      <div>
+        <div class="checkout-price" id="checkoutPrice">₹—</div>
+        <div class="checkout-note">Powered by Cashfree · Secure</div>
+      </div>
+    </div>
+    <button class="checkout-btn" id="checkoutBtn" onclick="checkout()">Pay Now →</button>
+  </div>
+
+</div>
+
+<!-- Cashfree JS SDK -->
+<script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+
+<script>
+  const API = 'https://luxurai.in';
+  let selectedPack = null;
+  let customLc = 0;
+  const cashfree = Cashfree({ mode: 'production' }); // change to 'sandbox' for TEST
+
+  // ── Auth ──────────────────────────────────────────────────
+  async function init() {
+    try {
+      const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+      if (!res.ok) { window.location.href = '/pages/index.html'; return; }
+      const user = await res.json();
+      document.getElementById('navBalance').textContent = (user.balance_lc ?? 0).toFixed(1);
+    } catch { window.location.href = '/pages/index.html'; }
+
+    loadPacks();
+    checkReturnUrl();
+  }
+
+  // ── Check if returning from payment ──────────────────────
+  async function checkReturnUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('order_id');
+    if (!orderId) return;
+
+    try {
+      const res = await fetch(`${API}/api/payment/cashfree/verify/${orderId}`, { credentials: 'include' });
+      const data = await res.json();
+      if (data.status === 'paid' || data.status === 'fulfilled') {
+        document.getElementById('successBanner').classList.add('show');
+        document.getElementById('navBalance').textContent = '—'; // will reload
+        window.scrollTo(0, 0);
+        history.replaceState({}, '', '/pages/payment.html');
+      }
+    } catch {}
+  }
+
+  // ── Load packs from API ───────────────────────────────────
+  async function loadPacks() {
+    const container = document.getElementById('packsContainer');
+    try {
+      const res = await fetch(`${API}/api/payment/packs`);
+      const data = await res.json();
+      renderPacks(data.packs);
+    } catch {
+      container.innerHTML = '<div class="loading">Failed to load packs. Please refresh.</div>';
+    }
+  }
+
+  function renderPacks(packs) {
+    const container = document.getElementById('packsContainer');
+    const mainPacks = packs.filter(p => !['trial','jumbo'].includes(p.id));
+    const trial     = packs.find(p => p.id === 'trial');
+    const jumbo     = packs.find(p => p.id === 'jumbo');
+
+    // First row: trial + first 5
+    const row1 = [trial, ...mainPacks.slice(0,2)].filter(Boolean);
+    const row2 = mainPacks.slice(2, 5);
+
+    container.innerHTML = `
+      <div class="packs-grid">
+        ${row1.map(p => packCard(p)).join('')}
+      </div>
+      <div class="packs-grid-2" style="margin-top:2px">
+        ${row2.map(p => packCard(p)).join('')}
+      </div>
+      ${jumbo ? `
+      <div class="jumbo-card" id="pack-jumbo" onclick="selectPack('jumbo', ${jumbo.lc}, ${jumbo.inr}, '${jumbo.label}')">
+        <div>
+          <div class="jumbo-badge">🔥 Weekly Special</div>
+          <div class="jumbo-title">Jumbo <em>Week</em> Pack</div>
+          <div class="jumbo-desc">Our best deal — ${jumbo.lc} LC for ₹${jumbo.inr}. More than Mega at a lower price.</div>
+        </div>
+        <div class="jumbo-right">
+          <div class="jumbo-lc">${jumbo.lc} LC</div>
+          <div class="jumbo-price">₹${jumbo.inr}</div>
+          <div class="jumbo-save">Save ₹100 vs Mega · +50 LC Bonus</div>
+        </div>
+      </div>` : ''}
+      <div class="custom-card">
+        <div class="custom-left">
+          <h3>Custom Amount</h3>
+          <p>Buy exactly what you need · Minimum 10 LC · 1 LC = ₹0.25</p>
+        </div>
+        <div class="custom-right">
+          <input type="number" class="custom-input" id="customInput" placeholder="10" min="10" oninput="updateCustom()">
+          <div class="custom-price-disp" id="customPriceDisp">₹2.50</div>
+          <button class="custom-select-btn" onclick="selectCustom()">Select</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function packCard(p) {
+    const isPopular = p.id === 'popular';
+    const savings   = p.savings_pct > 0 ? `Save ${p.savings_pct}%` : '';
+    return `
+      <div class="pack-card ${isPopular ? 'popular' : ''}" id="pack-${p.id}" onclick="selectPack('${p.id}', ${p.lc}, ${p.inr}, '${p.label}')">
+        ${isPopular ? '<div class="pack-badge">Most Popular</div>' : ''}
+        <div class="pack-name">${p.label}</div>
+        <div class="pack-lc">${p.lc} <span>LC</span></div>
+        <div class="pack-price">₹${p.inr}</div>
+        <div class="pack-per">₹${p.per_lc_inr}/LC</div>
+        ${savings ? `<div class="pack-save">↓ ${savings}</div>` : ''}
+      </div>`;
+  }
+
+  function updateCustom() {
+    const val = Math.max(10, parseInt(document.getElementById('customInput').value) || 10);
+    document.getElementById('customPriceDisp').textContent = '₹' + (val * 0.25).toFixed(2);
+    customLc = val;
+  }
+
+  function selectCustom() {
+    const val = Math.max(10, parseInt(document.getElementById('customInput').value) || 10);
+    selectPack('custom', val, val * 0.25, `Custom ${val} LC`);
+  }
+
+  // ── Pack selection ────────────────────────────────────────
+  function selectPack(packId, lc, inr, label) {
+    // Clear previous selection
+    document.querySelectorAll('.pack-card, .jumbo-card').forEach(el => el.classList.remove('selected'));
+    const el = document.getElementById(`pack-${packId}`);
+    if (el) el.classList.add('selected');
+
+    selectedPack = { packId, lc, inr, label };
+
+    document.getElementById('checkoutLc').innerHTML    = `${lc} <span>LC</span>`;
+    document.getElementById('checkoutPack').textContent = label;
+    document.getElementById('checkoutPrice').textContent = `₹${Number(inr).toFixed(2)}`;
+    document.getElementById('checkoutPanel').classList.add('show');
+  }
+
+  // ── Checkout via Cashfree ─────────────────────────────────
+  async function checkout() {
+    if (!selectedPack) return;
+
+    const btn = document.getElementById('checkoutBtn');
+    btn.disabled = true; btn.textContent = 'Processing...';
+
+    try {
+      // 1. Create order on backend
+      const res = await fetch(`${API}/api/payment/cashfree/create-order`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pack_id:   selectedPack.packId,
+          custom_lc: selectedPack.packId === 'custom' ? selectedPack.lc : null,
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.detail || 'Failed to create order. Please try again.');
+        btn.disabled = false; btn.textContent = 'Pay Now →';
+        return;
+      }
+
+      const order = await res.json();
+
+      if (order.dev_mode) {
+        // Dev mode — simulate success
+        alert(`Dev mode: Simulating ₹${selectedPack.inr} payment for ${selectedPack.lc} LC`);
+        await fetch(`${API}/api/payment/dev/simulate-payment?pack_id=${selectedPack.packId}`, { method:'POST', credentials:'include' });
+        document.getElementById('successBanner').classList.add('show');
+        window.scrollTo(0,0);
+        btn.disabled = false; btn.textContent = 'Pay Now →';
+        return;
+      }
+
+      // 2. Launch Cashfree checkout
+      const checkoutOptions = {
+        paymentSessionId: order.payment_session_id,
+        redirectTarget:   '_self',
+      };
+      cashfree.checkout(checkoutOptions);
+      // Cashfree redirects to return_url on success/failure
+
+    } catch (e) {
+      alert('Payment error. Please try again.');
+      btn.disabled = false; btn.textContent = 'Pay Now →';
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
