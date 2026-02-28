@@ -44,7 +44,7 @@ from pydantic import BaseModel
 from jose import JWTError, jwt
 from dotenv import load_dotenv
 
-from wallet import WalletService, REASON_ADMIN
+from backend.wallet import WalletService, REASON_ADMIN
 
 load_dotenv()
 load_dotenv("CashFree.env")
