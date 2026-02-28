@@ -45,6 +45,7 @@ import logging
 import aiosqlite
 from datetime import datetime, timezone
 from typing import Optional
+from dotenv import load_dotenv
 
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
