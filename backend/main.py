@@ -152,7 +152,7 @@ app.add_middleware(
 # ─────────────────────────────────────────────
 
 # Auth routes → /api/auth/*
-from auth import app as auth_app
+from backend.auth import app as auth_app
 app.mount("/api/auth", auth_app)
 
 # Payment routes → /api/payment/*
