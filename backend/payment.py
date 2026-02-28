@@ -40,12 +40,12 @@ from jose import JWTError, jwt
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-from wallet import (
+from backend.wallet import (
     WalletService, WalletError,
     InsufficientBalanceError, DuplicateTransactionError,
     REASON_PURCHASE
 )
-from referral import get_user_discount, apply_discount, record_referee_purchase
+from backend.referral import get_user_discount, apply_discount, record_referee_purchase
 
 load_dotenv()
 
