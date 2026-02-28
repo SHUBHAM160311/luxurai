@@ -49,7 +49,7 @@ from typing import Optional
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from jose import JWTError, jwt
-from dotenv import load_dotenv
+from backend.wallet import WalletService, REASON_REFERRAL
 
 from wallet import WalletService, REASON_REFERRAL
 
