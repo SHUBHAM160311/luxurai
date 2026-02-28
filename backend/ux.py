@@ -249,7 +249,7 @@ async def submit_generation(body: GenerateRequest, request: Request):
                        no_wm     -> 6 LC (was 7)
                        bulk      -> flat 5 LC for up to 10 images
     """
-    from wallet import BULK_MAX_IMGS
+    from backend.wallet import BULK_MAX_IMGS  
     user_id = await get_current_user(request)
 
     # Determine tier
