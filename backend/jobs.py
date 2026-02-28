@@ -361,7 +361,7 @@ class JobService:
 
         # Fire loyalty rewards (weekly + milestone) — non-blocking
         try:
-            from loyalty import check_and_award_loyalty
+            from backend.loyalty import check_and_award_loyalty
             await check_and_award_loyalty(completed_job.user_id)
         except Exception as e:
             logger.warning(f"Loyalty check failed for {completed_job.user_id}: {e}")
