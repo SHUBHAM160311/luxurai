@@ -5,6 +5,8 @@
 fastapi
 uvicorn[standard]
 pydantic
+pydantic[email]
+email-validator
 
 # ── Database ──────────────────────────────────
 aiosqlite
