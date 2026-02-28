@@ -37,9 +37,8 @@ from pydantic import BaseModel
 from jose import JWTError, jwt
 from dotenv import load_dotenv
 
-from wallet import WalletService, REASON_API_CALL
-from jobs import JobService, JobStatus, UserTier, InsufficientBalanceError
-
+from backend.wallet import WalletService, REASON_API_CALL
+from backend.jobs import JobService, JobStatus, UserTier, InsufficientBalanceError
 load_dotenv()
 
 logger = logging.getLogger("luxurai.ux")
