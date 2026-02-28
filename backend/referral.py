@@ -51,7 +51,7 @@ from pydantic import BaseModel
 from jose import JWTError, jwt
 from backend.wallet import WalletService, REASON_REFERRAL
 
-from wallet import WalletService, REASON_REFERRAL
+from backend.wallet import WalletService, REASON_REFERRAL
 
 load_dotenv()
 
