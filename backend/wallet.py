@@ -91,30 +91,45 @@ class WalletState:
 # ─────────────────────────────────────────────
 async def init_wallet_tables(db_path: str = DB_PATH):
     async with aiosqlite.connect(db_path) as db:
-        await db.executescript("""
+        await db.execute("""
             CREATE TABLE IF NOT EXISTS wallets (
                 user_id     TEXT PRIMARY KEY,
                 balance_lc  REAL NOT NULL DEFAULT 0,
                 updated_at  TEXT NOT NULL
-            );
-
+            )
+        """)
+        await db.execute("""
             CREATE TABLE IF NOT EXISTS wallet_ledger (
                 id            TEXT PRIMARY KEY,
                 user_id       TEXT NOT NULL,
                 delta_lc      REAL NOT NULL,
                 reason        TEXT NOT NULL,
-                ref_id        TEXT,
                 balance_after REAL NOT NULL,
                 created_at    TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+            )
+        """)
+        await db.commit()
 
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_ref_id
+        try:
+            await db.execute("ALTER TABLE wallet_ledger ADD COLUMN ref_id TEXT")
+            await db.commit()
+        except Exception:
+            pass
+
+        try:
+            await db.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_ref_id
                 ON wallet_ledger(ref_id)
-                WHERE ref_id IS NOT NULL;
+                WHERE ref_id IS NOT NULL
+            """)
+            await db.commit()
+        except Exception:
+            pass
 
+        await db.execute("""
             CREATE INDEX IF NOT EXISTS idx_ledger_user
-                ON wallet_ledger(user_id, created_at DESC);
+            ON wallet_ledger(user_id, created_at DESC)
         """)
         await db.commit()
 
