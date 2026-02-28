@@ -109,7 +109,6 @@ async def init_wallet_tables(db_path: str = DB_PATH):
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
 
-            -- Unique index on ref_id prevents duplicate credits/debits
             CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_ref_id
                 ON wallet_ledger(ref_id)
                 WHERE ref_id IS NOT NULL;
@@ -118,6 +117,13 @@ async def init_wallet_tables(db_path: str = DB_PATH):
                 ON wallet_ledger(user_id, created_at DESC);
         """)
         await db.commit()
+
+        # ── Migration: add ref_id column if missing (old DB) ──
+        try:
+            await db.execute("ALTER TABLE wallet_ledger ADD COLUMN ref_id TEXT")
+            await db.commit()
+        except Exception:
+            pass  # Column already exists, ignore
 
 
 # ─────────────────────────────────────────────
@@ -211,7 +217,6 @@ class WalletService:
             ) as cur:
                 row = await cur.fetchone()
             total = float(row["total"])
-            # Sync wallet table
             await db.execute(
                 "UPDATE wallets SET balance_lc = ?, updated_at = ? WHERE user_id = ?",
                 (total, _now(), user_id)
@@ -260,18 +265,12 @@ class WalletService:
         reason: str,
         ref_id: Optional[str] = None
     ) -> float:
-        """
-        Add LC to wallet.
-        Returns new balance.
-        Raises DuplicateTransactionError if ref_id already processed.
-        """
         if amount_lc <= 0:
             raise InvalidAmountError(f"Credit amount must be positive, got {amount_lc}")
 
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
 
-            # Idempotency guard
             if ref_id and await self._check_duplicate(db, ref_id):
                 raise DuplicateTransactionError(f"ref_id '{ref_id}' already credited")
 
@@ -294,19 +293,12 @@ class WalletService:
         reason: str,
         ref_id: Optional[str] = None
     ) -> float:
-        """
-        Deduct LC from wallet.
-        Returns new balance.
-        Raises InsufficientBalanceError if not enough LC.
-        Raises DuplicateTransactionError if ref_id already processed.
-        """
         if amount_lc <= 0:
             raise InvalidAmountError(f"Debit amount must be positive, got {amount_lc}")
 
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
 
-            # Idempotency guard
             if ref_id and await self._check_duplicate(db, ref_id):
                 raise DuplicateTransactionError(f"ref_id '{ref_id}' already debited")
 
@@ -335,10 +327,6 @@ class WalletService:
         original_ref_id: str,
         reason: str = REASON_REFUND
     ) -> float:
-        """
-        Refund LC back to wallet after a failed generation.
-        ref_id is prefixed with 'refund_' to avoid collision.
-        """
         refund_ref_id = f"refund_{original_ref_id}"
         return await self.credit(user_id, amount_lc, reason, refund_ref_id)
 
@@ -349,10 +337,6 @@ class WalletService:
         note: str,
         admin_id: str
     ) -> float:
-        """
-        Manual credit by admin (logged with admin_id).
-        Always has a unique ref_id so it's auditable.
-        """
         ref_id = f"admin_{admin_id}_{_new_id()}"
         return await self.credit(
             user_id, amount_lc,
@@ -365,16 +349,6 @@ class WalletService:
 # Generation lifecycle helper
 # ─────────────────────────────────────────────
 class GenerationBilling:
-    """
-    Handles the debit-before-generate, refund-on-fail pattern.
-
-    Usage:
-        billing = GenerationBilling(wallet_service)
-        async with billing.charge(user_id, cost_lc, job_id):
-            # run image generation here
-            # auto-refunds if exception is raised
-    """
-
     def __init__(self, wallet: WalletService):
         self.wallet = wallet
 
@@ -396,18 +370,16 @@ class GenerationBilling:
 
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             if exc_type is not None and not self.committed:
-                # Generation failed → refund
                 try:
                     await self.wallet.refund(
                         self.user_id, self.amount_lc,
                         original_ref_id=self.job_id
                     )
                 except Exception:
-                    pass  # Log in production
-            return False  # Don't suppress exceptions
+                    pass
+            return False
 
         def commit(self):
-            """Call after successful generation."""
             self.committed = True
 
     def charge(self, user_id: str, amount_lc: float, job_id: str) -> "_Charge":
@@ -418,7 +390,6 @@ class GenerationBilling:
 # Image generation cost calculator
 # ─────────────────────────────────────────────
 
-# Base resolution costs (same for all users)
 BASE_COST = {
     "100x100":   0.5,
     "200x200":   1.0,
@@ -430,31 +401,22 @@ BASE_COST = {
     "2048x2048": 15.0,
 }
 
-# Addon costs (normal user prices)
 ADDON_COST = {
-    "fast_gen":     3.0,   # API user pays 2.0 (1 LC discount)
-    "no_watermark": 7.0,   # API user pays 6.0 (1 LC discount)
+    "fast_gen":     3.0,
+    "no_watermark": 7.0,
 }
 
-# API Key subscription cost (per month, one-time deduct)
 API_KEY_SUBSCRIPTION_LC = 2.0
 
-# Bulk: only for API users, flat 5 LC for up to 10 images
 BULK_COST_LC   = 5.0
 BULK_MAX_IMGS  = 10
 
-# Resolutions where API discount does NOT apply (≤200 on both sides)
 NO_DISCOUNT_RESOLUTIONS = {"100x100", "200x200"}
 
-# 1 LC discount for API users on all resolutions above 200
 API_DISCOUNT_LC = 1.0
 
 
 def _is_above_200(resolution: str) -> bool:
-    """
-    Returns True if BOTH dimensions are above 200px.
-    e.g. 500x500 → True, 200x200 → False, 1024x1024 → True
-    """
     res = resolution.lower().replace(" ", "")
     if "x" not in res:
         return False
@@ -473,40 +435,21 @@ def calculate_generation_cost(
     bulk: bool = False,
     bulk_count: int = 1,
 ) -> float:
-    """
-    Single source of truth for generation pricing.
-
-    Rules:
-      - Normal users: base cost + addons at full price. No bulk.
-      - API users:
-          * All resolutions >200 (both sides) → base cost - 1 LC
-          * fast_gen addon  → 2 LC (instead of 3)
-          * no_watermark    → 6 LC (instead of 7)
-          * bulk (max 10)   → flat 5 LC total (ignores per-image cost)
-
-    Returns total LC cost.
-    """
-    # ── Bulk (API only, flat rate) ────────────
     if bulk:
         if not is_api:
             raise PermissionError("Bulk generation is only available for API key users.")
         count = min(max(1, bulk_count), BULK_MAX_IMGS)
-        return BULK_COST_LC   # 5 LC flat for up to 10 images
+        return BULK_COST_LC
 
-    # ── Base resolution cost ──────────────────
     res_key = resolution.lower().replace(" ", "")
     cost = BASE_COST.get(res_key, 1.0)
 
-    # API discount on resolution (only if >200 both sides)
     if is_api and _is_above_200(resolution):
-        cost = max(0, cost - API_DISCOUNT_LC)   # never go below 0
+        cost = max(0, cost - API_DISCOUNT_LC)
 
-    # ── Addons ────────────────────────────────
-    # fast_gen: only when bulk is NOT used (bulk already covers it)
     if fast:
         cost += (ADDON_COST["fast_gen"] - API_DISCOUNT_LC) if is_api else ADDON_COST["fast_gen"]
 
-    # no_watermark
     if no_watermark:
         cost += (ADDON_COST["no_watermark"] - API_DISCOUNT_LC) if is_api else ADDON_COST["no_watermark"]
 
@@ -514,5 +457,4 @@ def calculate_generation_cost(
 
 
 def get_api_subscription_cost() -> float:
-    """Returns the monthly API key subscription cost in LC."""
     return API_KEY_SUBSCRIPTION_LC
