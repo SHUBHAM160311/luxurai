@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 import aiosqlite
-from wallet import WalletService, GenerationBilling, calculate_generation_cost
+from backend.wallet import WalletService, GenerationBilling, calculate_generation_cost
 
 
 # ─────────────────────────────────────────────
